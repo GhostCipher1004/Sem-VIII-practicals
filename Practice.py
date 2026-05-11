@@ -130,9 +130,9 @@ for _ in range(50):
         clones.extend(c)
 
     clones = np.array(clones)
-    best = pop[np.argsort([f(x) for x in clones][:15])]
+    best_clones = clones[np.argsort([f(x) for x in clones])[:15]]  # ✅ FIXED
     new = np.random.uniform(-10, 10, 5)
-    pop = np.concatenate([best, new])
+    pop = np.concatenate([best_clones, new])
 
 best = pop[np.argmin([f(x) for x in pop])]
 print("Best x :", best)
@@ -297,16 +297,24 @@ for i in range(len(requests)):
 	print(requests[i], "assigned to", server)
 
 print("LEAST CONNECTION LOAD BALANCING")
-load = {"Server1" : 0, "Server2" : 0, "Server3" : 0}
+~
+load = {"Server1": 0, "Server2": 0, "Server3": 0}
 
 for request in requests:
-	server = min(load, key = load.get)
-	print(request, "assigned to", server)
-	load[server] += 1
-	print("Current load :", load)
-	load[server] -= 1
+    # Pick server with minimum active connections
+    server = min(load, key=load.get)
+    print(request, "assigned to", server)
 
-print("Final load\n", load)
+    # Increment connection count when request arrives
+    load[server] += 1
+    print("Current load :", load)
+
+# Simulate request completion: decrement after requests finish
+print("\nSimulating request completion...")
+for server in load:
+    load[server] = max(0, load[server] - 1)   # decrement on completion, min=0
+
+print("Final load   :", load)
 
 print("RANDOM LOAD BALANCING")
 
