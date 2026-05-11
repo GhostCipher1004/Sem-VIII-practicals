@@ -44,7 +44,7 @@ print("Composition :\n", max_min(R1, R2))
 
 
 # CI 2 : Optimization of genetic algorithm parameter in hybrid genetic algorithm-neural network modelling: Application to spray drying of coconut milk.
-
+# Completed code
 import numpy as np
 import pandas as pd
 from sklearn.neural_network import MLPClassifier
@@ -57,7 +57,10 @@ data = pd.read_csv("iris.csv")
 x = data.iloc[:, :-1]
 y = LabelEncoder().fit_transform(data.iloc[:, -1])
 
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
+# FIX 1: Added shuffle=True and random_state=42 for consistent, properly shuffled splits
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2,
+                                                      shuffle=True,
+                                                      random_state=42)
 
 # Fitness function
 def fitness(p):
@@ -67,26 +70,42 @@ def fitness(p):
     model.fit(x_train, y_train)
     return model.score(x_test, y_test)
 
+# FIX 2: Added mutation function — missing from original code
+def mutate(child):
+    if np.random.random() < 0.1:                        # 10% chance of mutation
+        child[0] = max(5, child[0] + np.random.randint(-3, 3))   # mutate neurons, min=5
+        child[1] = np.clip(child[1] + np.random.uniform(-0.01, 0.01),
+                           0.001, 0.1)                  # mutate learning rate, stay in range
+    return child
+
 # Initial population
-pop = [[np.random.randint(5,50),
-        np.random.uniform(0.001,0.1)] for _ in range(5)]
+pop = [[np.random.randint(5, 50),
+        np.random.uniform(0.001, 0.1)] for _ in range(5)]
 
 # Genetic Algorithm
-for _ in range(10):
+for gen in range(10):
 
+    # SELECTION — sort by fitness, best first
     pop = sorted(pop, key=fitness, reverse=True)
 
+    # CROSSOVER — combine top 2 parents
     p1, p2 = pop[0], pop[1]
+    child = [(p1[0] + p2[0]) // 2,
+             (p1[1] + p2[1]) / 2]
 
-    child = [(p1[0]+p2[0])//2,
-             (p1[1]+p2[1])/2]
+    # FIX 3: MUTATION — apply mutation to child before inserting
+    child = mutate(child)
 
+    # Replace worst individual with mutated child
     pop[-1] = child
+
+    print(f"Generation {gen+1}: Best Fitness = {fitness(pop[0]):.4f}, "
+          f"Params = {pop[0]}")
 
 # Best solution
 best = pop[0]
-
-print("Best Parameters:", best)
+print("\nBest Parameters:", best)
+print("Best Accuracy:  ", round(fitness(best), 4))
 
 
 # CI 3 : Implementation of Clonal selection algorithm using Python
